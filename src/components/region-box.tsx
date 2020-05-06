@@ -1,7 +1,7 @@
 import React from 'react'
 import './region-box.scss'
 import dateformat from 'dateformat'
-import { Chart } from 'chart.js'
+import Chart from 'chart.js'
 Chart.defaults.global.defaultFontColor = '#dddddd'
 
 export interface IRegionData {
@@ -28,40 +28,29 @@ interface IProps {
 export default class RegionBox extends React.Component<IProps> {
 
     private chartCtx: HTMLCanvasElement | null = null
+    private chart?: Chart
 
-    updateChartData() {
+    initChart() {
       if (!this.chartCtx) {
-        setTimeout(() => this.updateChartData(), 250)
+        setTimeout(() => this.initChart(), 250)
         return
       }
-      const regionData = this.props.regionData
-      const begin = new Date(regionData.epidemic.begin)
-      const barData = regionData.epidemic.data.map((row, idx) => {
-        let date = new Date(begin)
-        date.setDate(begin.getDate() + idx)
-        let [Confirmed, suspected, Recovered, Deceased, severe, risk] = row
-        Recovered = Recovered || 0
-        Deceased = Deceased || 0
-        const Remain = Math.max(0,(Confirmed || 0) - Recovered - Deceased)
-        return {Remain, Recovered, Deceased, Date: dateformat(date, 'yyyy-mm-dd')}
-      })
-      const dates = barData.map(p => p.Date)
-      const chart = new Chart(this.chartCtx, {
+      this.chart = new Chart(this.chartCtx, {
         type: 'bar',
         data: {
-          labels: dates,
+          labels: [],
           datasets: [{
             label: 'Remain',
-            backgroundColor: "#45c490",
-            data: barData.map(p => p.Remain)
+            backgroundColor: "#008d93",
+            data: []
           }, {
             label: 'Deceased',
-            backgroundColor: "#caf270",
-            data: barData.map(p => p.Deceased)
+            backgroundColor: "#3b5c7a",
+            data: []
           }, {
             label: 'Recovered',
-            backgroundColor: "#008d93",
-            data: barData.map(p => p.Recovered)
+            backgroundColor: "#45c490",
+            data: []
           }]
         },
         options: {
@@ -93,12 +82,42 @@ export default class RegionBox extends React.Component<IProps> {
       })
     }
 
-    componentDidMount() {
-      this.updateChartData()
+    updateChartData() {
+      if (!this.chart) {
+        setTimeout(() => this.updateChartData(), 250)
+        return
+      }
+      const regionData = this.props.regionData
+      const begin = new Date(regionData.epidemic.begin)
+      const barData = regionData.epidemic.data.map((row, idx) => {
+        let date = new Date(begin)
+        date.setDate(begin.getDate() + idx)
+        let [Confirmed, suspected, Recovered, Deceased, severe, risk] = row
+        Recovered = Recovered || 0
+        Deceased = Deceased || 0
+        const Remain = Math.max(0,(Confirmed || 0) - Recovered - Deceased)
+        return {Remain, Recovered, Deceased, Date: dateformat(date, 'yyyy-mm-dd')}
+      })
+      const dates = barData.map(p => p.Date)
+      this.chart.data.labels = dates
+      this.chart!.data.datasets![0].data = barData.map(p => p.Remain)
+      this.chart!.data.datasets![1].data = barData.map(p => p.Deceased)
+      this.chart!.data.datasets![2].data = barData.map(p => p.Recovered)
+      this.chart.update()
     }
+
+    componentDidMount() {
+      this.initChart()
+    }
+
+    private lastRegionData?: IRegionData
 
     render() {
       const regionData = this.props.regionData
+      if (regionData !== this.lastRegionData) {
+        this.lastRegionData = regionData
+        this.updateChartData()
+      }
       const [confirmed, suspected, cured, dead, severe, risk] = regionData.epidemic.data[regionData.epidemic.data.length - 1]
       return <div className="region-info-box">
         <div className="name">

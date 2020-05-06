@@ -5,15 +5,10 @@ import RegionBox from './components/region-box'
 import './App.scss'
 import axios from 'axios'
 import _ from 'lodash'
+import DetailBox from './components/detail-box'
+import { ISearchEntry } from './components/detail-box'
 const parsecsv = require('csv-parse/lib/sync')
 
-interface ISearchEntry {
-  title: string
-  content: string
-  time: string
-  urls: string[]
-  source: string
-}
 interface IProps {}
 interface ISearchData {
   entries: ISearchEntry[]
@@ -23,9 +18,9 @@ interface ISearchData {
 }
 interface IState {
   query: string
-  loading: boolean
   search: ISearchData
   metaText: string
+  hoverEntry?: ISearchEntry
 }
 
 
@@ -35,7 +30,6 @@ export default class App extends React.Component<IProps, IState> {
     super(props)
     this.state = {
       query: '',
-      loading: false,
       search: {
         entries: [],
         count: 0,
@@ -51,7 +45,7 @@ export default class App extends React.Component<IProps, IState> {
   onSearch = _.debounce(() => {
     if (this.searchQuery.length === 0 || this.searchQuery === this.lastSearch) return
     this.lastSearch = this.searchQuery
-    this.setState({loading: true, metaText: 'Searching...'})
+    this.setState({metaText: 'Searching...', hoverEntry: undefined})
     const beginTime = new Date()
     axios.get(process.env.REACT_APP_API_URL + '/search', { params: {
         q: this.searchQuery,
@@ -62,9 +56,9 @@ export default class App extends React.Component<IProps, IState> {
       const timeCost = (new Date().getTime() - beginTime.getTime()) / 1000
       this.setState({
         search: {...this.state.search, entries: resp.data.data, count: resp.data.count},
-        loading: false, metaText: `${resp.data.count} documents retrieved in ${timeCost.toFixed(4)} seconds.`})
+        metaText: `${resp.data.count} documents retrieved in ${timeCost.toFixed(4)} seconds.`})
     }).catch(err => {
-      this.setState({loading: false, metaText: `No documents found.`})
+      this.setState({metaText: `No documents found.`})
       console.error('search error', err)
     })
   }, 250)
@@ -115,7 +109,7 @@ export default class App extends React.Component<IProps, IState> {
   private regionData: {[id: string]: IRegionData} = {}
   private searchKeyToRegionID: {[id: string]: string} = {}
   private regionIDToSubIDs: {[id: string]: string[]} = {}
-  componentWillMount() {
+  componentDidMount() {
     Promise.all([
       axios.get(process.env.REACT_APP_API_URL + '/dist/epidemic.json', { headers: {'Cache-Control': 'no-cache' }}),
       axios.get(process.env.REACT_APP_API_URL + '/dist/regions-info.csv', { headers: {'Cache-Control': 'no-cache' }})
@@ -162,7 +156,6 @@ export default class App extends React.Component<IProps, IState> {
   getRegion(): [string, IRegionData] | [undefined, undefined] {
     const q = this.state.query
     const testID = q.replace(/, /g, '|')
-    console.log(testID)
     if (this.regionData[testID]) return [testID, this.regionData[testID]]
     for (let len = q.length; len >= 1; --len) {
       for (let start = 0; start <= q.length - len; ++start) {
@@ -218,14 +211,15 @@ export default class App extends React.Component<IProps, IState> {
       </div>
       {searching && <div className="info-box">
         <div className="info-container">
-          {regionData && <RegionBox regionData={regionData} relatedRegions={this.getRelatedRegion(regionID!)} onSearch={(query) => this.onInputChange(query)}/>}
+          {regionData && !this.state.hoverEntry && <RegionBox regionData={regionData} relatedRegions={this.getRelatedRegion(regionID!)} onSearch={(query) => this.onInputChange(query)}/>}
+          {this.state.hoverEntry && <DetailBox entry={this.state.hoverEntry} onClose={() => this.setState({hoverEntry: undefined})}/>}
         </div>
       </div>}
       {searching && <div className="search-entries-container">
         <div className="meta">{this.state.metaText}</div>
         {this.state.search.entries.map((entry, idx) => {
-          return <div className="search-entries" key={idx}>
-            <div className="entry-title">{entry.urls.length > 0 ? <a href={entry.urls[0]} target="_blank">{entry.title}</a> : entry.title}</div>
+          return <div className="search-entries" key={idx} onMouseEnter={() => this.setState({hoverEntry: entry})}>
+            <div className="entry-title">{entry.urls.length > 0 ? <a href={entry.urls[0]} target="_blank" rel="noopener noreferrer">{entry.title}</a> : entry.title}</div>
             <div className="entry-content">{entry.content}</div>
             <div className="entry-meta">
               <span>Date: { entry.time.split(' ')[0].replace(/\//g, '-')}</span>
