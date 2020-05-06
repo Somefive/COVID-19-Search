@@ -158,6 +158,10 @@ $header-top: 50px;
                 color: #b6cfff;
                 cursor: pointer;
             }
+            .h {
+                color: rgb(183, 255, 227);
+                font-weight: 600;
+            }
         }
         .entry-content {
             font-size: 16px;
@@ -170,6 +174,10 @@ $header-top: 50px;
             &:hover {
                 overflow: visible;
                 display: block;
+            }
+            .h {
+                color: rgb(183, 255, 227);
+                font-weight: 550;
             }
         }
         .entry-meta {

@@ -180,6 +180,23 @@ export default class App extends React.Component<IProps, IState> {
     return res
   }
 
+  highlightedText(text: string): JSX.Element[] {
+    const words = this.state.query.split(' ').map(w => w.toLowerCase()).filter(w => w.length > 0)
+    let begin = 0
+    const spans: JSX.Element[] = []
+    while (true) {
+      const places = words.map(w => { return [text.toLowerCase().indexOf(w, begin), w.length] }).filter(x => x[0] >= 0)
+      if (places.length === 0) break
+      places.sort((a, b) => a[0] - b[0])
+      const ws = places[0][0], we = places[0][0] + places[0][1]
+      spans.push(<span className="n" key={spans.length}>{text.slice(begin, ws)}</span>)
+      spans.push(<span className="h" key={spans.length}>{text.slice(ws, we)}</span>)
+      begin = we
+    }
+    spans.push(<span className="n" key={spans.length}>{text.slice(begin, text.length)}</span>)
+    return spans
+  }
+
   render() {
     const [regionID, regionData] = this.getRegion()
     const searching = this.state.search.entries.length > 0 || regionData
@@ -219,8 +236,8 @@ export default class App extends React.Component<IProps, IState> {
         <div className="meta">{this.state.metaText}</div>
         {this.state.search.entries.map((entry, idx) => {
           return <div className="search-entries" key={idx} onMouseEnter={() => this.setState({hoverEntry: entry})}>
-            <div className="entry-title">{entry.urls.length > 0 ? <a href={entry.urls[0]} target="_blank" rel="noopener noreferrer">{entry.title}</a> : entry.title}</div>
-            <div className="entry-content">{entry.content}</div>
+            <div className="entry-title"><a href={entry.urls.length > 0 ? entry.urls[0] : ''} target="_blank" rel="noopener noreferrer">{this.highlightedText(entry.title)}</a></div>
+            <div className="entry-content">{this.highlightedText(entry.content)}</div>
             <div className="entry-meta">
               <span>Date: { entry.time.split(' ')[0].replace(/\//g, '-')}</span>
               {entry.source && <span>Source: {entry.source}</span>}
