@@ -1,0 +1,30 @@
+.entity-box {
+    padding: 20px;
+    width: calc(100% - 40px);
+    color: #cccccc;
+    font-size: 18px;
+    line-height: 1.5;
+    position: relative;
+    .name {
+        .primary {
+            font-size: 32px;
+            color: #ffffff;
+        }
+        .secondary {
+            font-size: 24px;
+            color: #dddddd;
+        }
+        margin-bottom: 10px;
+    }
+    .abstract {
+        font-size: 16px;
+    }
+    .h {
+        color: rgb(183, 229, 255);
+        font-weight: 600;
+        &:hover {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    }
+}

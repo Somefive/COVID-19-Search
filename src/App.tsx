@@ -3,10 +3,12 @@ import { ReactComponent as CometIcon } from './icons/comet.svg'
 import { IRegionData, IRegionPack } from './components/region-box'
 import RegionBox from './components/region-box'
 import './App.scss'
-import axios from 'axios'
+import axios, { CancelTokenSource } from 'axios'
 import _ from 'lodash'
 import DetailBox from './components/detail-box'
 import { ISearchEntry } from './components/detail-box'
+import EntityBox from './components/entity-box'
+import { IInstanceEntity } from './components/entity-box'
 const parsecsv = require('csv-parse/lib/sync')
 
 interface IProps {}
@@ -21,6 +23,7 @@ interface IState {
   search: ISearchData
   metaText: string
   hoverEntry?: ISearchEntry
+  focusEntity?: IInstanceEntity
 }
 
 
@@ -40,27 +43,48 @@ export default class App extends React.Component<IProps, IState> {
     }
   }
 
+  private searchCancelSource: CancelTokenSource = axios.CancelToken.source()
+  private entityCancelSource: CancelTokenSource = axios.CancelToken.source()
   private lastSearch: string = ''
+  private lastEntitySearch: string = ''
   private searchQuery: string = ''
   onSearch = _.debounce(() => {
     if (this.searchQuery.length === 0 || this.searchQuery === this.lastSearch) return
+    const updateEntity = !this.state.focusEntity || this.lastEntitySearch !== this.searchQuery
     this.lastSearch = this.searchQuery
-    this.setState({metaText: 'Searching...', hoverEntry: undefined})
+    this.searchCancelSource.cancel()
+    this.searchCancelSource = axios.CancelToken.source()
+    this.setState({metaText: 'Searching...', hoverEntry: undefined, focusEntity: updateEntity ? undefined : this.state.focusEntity})
     const beginTime = new Date()
     axios.get(process.env.REACT_APP_API_URL + '/search', { params: {
         q: this.searchQuery,
         skip: this.state.search.pageSize * this.pageIndex,
         limit: this.state.search.pageSize,
         sort: this.state.search.sort
-      } }).then(resp => {
+      }, cancelToken: this.searchCancelSource.token }).then(resp => {
       const timeCost = (new Date().getTime() - beginTime.getTime()) / 1000
       this.setState({
         search: {...this.state.search, entries: resp.data.data, count: resp.data.count},
         metaText: `${resp.data.count} documents retrieved in ${timeCost.toFixed(4)} seconds.`})
     }).catch(err => {
-      this.setState({metaText: `No documents found.`})
-      console.error('search error', err)
+      if (!axios.isCancel(err)) {
+        this.setState({metaText: `No documents found.`})
+        console.error('search error', err)
+      }
     })
+    if (updateEntity) {
+      this.lastEntitySearch = this.searchQuery
+      this.entityCancelSource.cancel()
+      this.entityCancelSource = axios.CancelToken.source()
+      axios.get('https://api.xlore.org/query', { params: { instances: this.searchQuery }, cancelToken: this.entityCancelSource.token }).then(resp => {
+        const entity = (resp.data.Instances as any[]).find(e => (e.Label as string).toLowerCase() === this.searchQuery.toLowerCase())
+        if (!entity) return
+        axios.get('https://api.xlore.org/query', { params: { uri: entity.Uri }, cancelToken: this.entityCancelSource!.token }).then(resp => {
+          this.setState({ focusEntity: resp.data })
+        })
+        .catch(err => { if (!axios.isCancel(err)) console.error('entity search error', err) })
+      }).catch(err => { if (!axios.isCancel(err)) console.error('entity search error', err) })
+    }
   }, 250)
 
   reSearch() {
@@ -201,6 +225,8 @@ export default class App extends React.Component<IProps, IState> {
     const [regionID, regionData] = this.getRegion()
     const searching = this.state.search.entries.length > 0 || regionData
     return <div className="App">
+      {searching && <div className="search-header-background"/>}
+      <div className="app-container">
       <div className={`search-component ${searching ? 'search' : ''}`}>
         <div className="app-title">COVID-19 Search</div>
         <div className="search-box">
@@ -229,6 +255,7 @@ export default class App extends React.Component<IProps, IState> {
       {searching && <div className="info-box">
         <div className="info-container">
           {regionData && !this.state.hoverEntry && <RegionBox regionData={regionData} relatedRegions={this.getRelatedRegion(regionID!)} onSearch={(query) => this.onInputChange(query)}/>}
+          {!regionData && !this.state.hoverEntry && this.state.focusEntity && <EntityBox entity={this.state.focusEntity} onSearch={(query) => this.onInputChange(query)}/>}
           {this.state.hoverEntry && <DetailBox entry={this.state.hoverEntry} onClose={() => this.setState({hoverEntry: undefined})}/>}
         </div>
       </div>}
@@ -257,6 +284,7 @@ export default class App extends React.Component<IProps, IState> {
           <i onClick={() => this.setPage(this.state.search.count / this.state.search.pageSize + 1)} className="fas fa-angle-double-right"/>
         </div>
       </div>}
+      </div>
     </div>
   }
 }

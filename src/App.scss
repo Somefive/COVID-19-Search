@@ -3,22 +3,39 @@
     min-height: 100vh;
     width: 100%;
     overflow-x: hidden;
+    .app-container {
+        position: relative;
+        max-width: 1280px;
+        height: 100vh;
+        left: 50%;
+        top: 0;
+        transform: translate(-50%);
+    }
 }
 
 $header-top: 50px;
 
+.search-header-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2 * $header-top;
+    background: linear-gradient(0deg, #282c34ff 0%, #1e3270ff 100%);
+}
+
 .search-component {
     z-index: 1000;
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     height: 2 * $header-top;
     width: 100%;
     background: transparent;
     .app-title {
-        position: fixed;
+        position: absolute;
         left: 50%;
-        top: calc(50% - 50px);
+        top: calc(50vh - 50px);
         transform: translate(-50%, -100%);
         font-size: 64px;
         color: #ccdeff;
@@ -28,9 +45,9 @@ $header-top: 50px;
         transition-duration: .5s;
     }
     .search-box {
-        position: fixed;
+        position: absolute;
         left: 50%;
-        top: 50%;
+        top: 50vh;
         transform: translate(-50%, 0);
         border-style: solid;
         border-color: white;
@@ -110,7 +127,7 @@ $header-top: 50px;
 }
 
 .search-component.search {
-    background: linear-gradient(0deg, #282c34ff 0%, #1e3270ff 100%);
+    background: transparent;
     .app-title {
         left: 30px;
         top: $header-top;
@@ -133,13 +150,14 @@ $header-top: 50px;
 }
 
 .search-entries-container {
-    position: relative;
-    top: 0;
+    position: absolute;
+    left: 0;
+    top: $header-top * 2;
     width: calc(60% - 60px);
-    padding-top: 2 * $header-top + 30px;
-    padding-bottom: 30px;
-    padding-left: 30px;
-    padding-right: 30px;
+    height: calc(100% - #{$header-top * 2} - 60px);
+    padding: 30px;
+    overflow-y: scroll;
+    overflow-x: hidden;
     color: white;
     .search-entries {
         border-bottom: 1px #aaaaaa solid;
@@ -223,20 +241,29 @@ $header-top: 50px;
             }
         }
     }
+    &::-webkit-scrollbar {
+        width: 7px;
+    }
+    &::-webkit-scrollbar-thumb {
+        border-radius: 5px;
+        background-color: rgb(92, 133, 156);
+        outline: none;
+    }
 }
 
 .info-box {
-    position: fixed;
+    position: absolute;
     right: 0;
     top: $header-top * 2;
     width: 40%;
     height: calc(100% - #{$header-top * 2});
+    overflow-y: scroll;
+    overflow-x: hidden;
     .info-container {
         width: calc(100% - 40px);
         height: calc(100% - 40px);
-        padding: 10px;
-        margin: 10px;
-        border-left: 1px #dddddd30 solid;
+        padding: 20px;
+        border-left: 3px #dddddd30 solid;
         .epidemic-info {
             margin-bottom: 15px;
         }
@@ -244,5 +271,13 @@ $header-top: 50px;
     .trend-chart-container {
         position: relative;
         max-height: 300px;
+    }
+    &::-webkit-scrollbar {
+        width: 7px;
+    }
+    &::-webkit-scrollbar-thumb {
+        border-radius: 5px;
+        background-color: rgb(92, 133, 156);
+        outline: none;
     }
 }
