@@ -229,5 +229,12 @@ $header-top: 50px;
         padding: 10px;
         margin: 10px;
         border-left: 1px #dddddd30 solid;
+        .epidemic-info {
+            margin-bottom: 15px;
+        }
+    }
+    .trend-chart-container {
+        position: relative;
+        max-height: 300px;
     }
 }

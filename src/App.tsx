@@ -1,8 +1,11 @@
 import React from 'react'
 import { ReactComponent as CometIcon } from './icons/comet.svg'
+import { IRegionData, IRegionPack } from './components/region-box'
+import RegionBox from './components/region-box'
 import './App.scss'
 import axios from 'axios'
 import _ from 'lodash'
+const parsecsv = require('csv-parse/lib/sync')
 
 interface ISearchEntry {
   title: string
@@ -24,6 +27,7 @@ interface IState {
   search: ISearchData
   metaText: string
 }
+
 
 export default class App extends React.Component<IProps, IState> {
   pageIndex: number = 0
@@ -108,8 +112,84 @@ export default class App extends React.Component<IProps, IState> {
     }
   }
 
+  private regionData: {[id: string]: IRegionData} = {}
+  private searchKeyToRegionID: {[id: string]: string} = {}
+  private regionIDToSubIDs: {[id: string]: string[]} = {}
+  componentWillMount() {
+    Promise.all([
+      axios.get(process.env.REACT_APP_API_URL + '/dist/epidemic.json', { headers: {'Cache-Control': 'no-cache' }}),
+      axios.get(process.env.REACT_APP_API_URL + '/dist/regions-info.csv', { headers: {'Cache-Control': 'no-cache' }})
+    ]).then(resps => {
+      const epdata = resps[0].data
+      const csvdata = (parsecsv(resps[1].data) as any[][]).filter(pack => epdata[pack[0]] !== undefined)
+      const searchKeyToID: {[key: string]: string} = {}
+      const dupSearchKey: {[key: string]: boolean} = {}
+      const idToSubIDs: {[id: string]: string[]} = {}
+      csvdata.forEach(row => {
+        const [id, zhname, enname] = row as [string, string, string]
+        if (!epdata[id]) return
+        const idseg = id.split('|')
+        const enwords = enname.split(' ')
+        if (idseg.length < 3) {
+          const sks = _.uniq([
+            ..._.range(1, zhname.length+1).map(end => zhname.slice(0, end)),
+            ..._.range(1, enwords.length+1).map(end => enwords.slice(0, end).join(' ')),
+            ..._.range(0, enwords.length).map(start => enwords.slice(start).join(' '))
+          ])
+          sks.forEach(sk => {
+            if (dupSearchKey[sk]) return
+            if (!searchKeyToID[sk]) searchKeyToID[sk] = id
+            else {
+              dupSearchKey[sk] = true
+              delete searchKeyToID[sk]
+            }
+          })
+        }
+        if (idseg.length > 1) {
+          const parentID = idseg.slice(0, idseg.length-1).join('|')
+          if (epdata[parentID]) {
+            if (!idToSubIDs[parentID]) idToSubIDs[parentID] = [id]
+            else idToSubIDs[parentID].push(id)
+          }
+        }
+        this.regionData[id] = {zhname: zhname, enname: enname, epidemic: epdata[id]}
+      })
+      this.searchKeyToRegionID = searchKeyToID
+      this.regionIDToSubIDs = idToSubIDs
+    })
+  }
+
+  getRegion(): [string, IRegionData] | [undefined, undefined] {
+    const q = this.state.query
+    const testID = q.replace(/, /g, '|')
+    console.log(testID)
+    if (this.regionData[testID]) return [testID, this.regionData[testID]]
+    for (let len = q.length; len >= 1; --len) {
+      for (let start = 0; start <= q.length - len; ++start) {
+        const sk = q.slice(start, start + len)
+        if (this.searchKeyToRegionID[sk]) return [this.searchKeyToRegionID[sk], this.regionData[this.searchKeyToRegionID[sk]]]
+      }
+    }
+    return [undefined, undefined]
+  }
+
+  getRelatedRegion(id: string): IRegionPack[] {
+    let res: IRegionPack[] = []
+    if (id.indexOf('|') >= 0) {
+      const parentID = id.slice(0,id.lastIndexOf('|'))
+      const parentRegion = this.regionData[parentID]
+      if (parentRegion) res.push({id: parentID, enname: parentRegion.enname, zhname: parentRegion.zhname})
+    }
+    (this.regionIDToSubIDs[id] || []).forEach(subID => {
+      const subRegion = this.regionData[subID]
+      if (subRegion) res.push({id: subID, enname: subRegion.enname, zhname: subRegion.zhname})
+    })
+    return res
+  }
+
   render() {
-    const searching = this.state.search.entries.length > 0
+    const [regionID, regionData] = this.getRegion()
+    const searching = this.state.search.entries.length > 0 || regionData
     return <div className="App">
       <div className={`search-component ${searching ? 'search' : ''}`}>
         <div className="app-title">COVID-19 Search</div>
@@ -138,6 +218,7 @@ export default class App extends React.Component<IProps, IState> {
       </div>
       {searching && <div className="info-box">
         <div className="info-container">
+          {regionData && <RegionBox regionData={regionData} relatedRegions={this.getRelatedRegion(regionID!)} onSearch={(query) => this.onInputChange(query)}/>}
         </div>
       </div>}
       {searching && <div className="search-entries-container">
