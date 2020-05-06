@@ -263,7 +263,7 @@ export default class App extends React.Component<IProps, IState> {
         <div className="meta">{this.state.metaText}</div>
         {this.state.search.entries.map((entry, idx) => {
           return <div className="search-entries" key={idx} onMouseEnter={() => this.setState({hoverEntry: entry})}>
-            <div className="entry-title"><a href={entry.urls.length > 0 ? entry.urls[0] : ''} target="_blank" rel="noopener noreferrer">{this.highlightedText(entry.title)}</a></div>
+            <div className="entry-title"><a href={entry.urls.length > 0 ? entry.urls[0] : '#'} target="_blank" rel="noopener noreferrer">{this.highlightedText(entry.title)}</a></div>
             <div className="entry-content">{this.highlightedText(entry.content)}</div>
             <div className="entry-meta">
               <span>Date: { entry.time.split(' ')[0].replace(/\//g, '-')}</span>

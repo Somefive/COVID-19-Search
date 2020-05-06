@@ -23,7 +23,7 @@ export default class DetailBox extends React.Component<IProps> {
             {this.props.entry.related_events.map((event, idx) =>
                 <div className="related-events" key={idx}>
                     <span className="date">{event.time.split(' ')[0].replace(/\//g, '-')}</span>
-                    <span><a href={event.urls.length > 0 ? event.urls[0] : ""} target="_blank" rel="noopener noreferrer">{event.title}</a></span>
+                    <span><a href={event.urls.length > 0 ? event.urls[0] : "#"} target="_blank" rel="noopener noreferrer">{event.title}</a></span>
                 </div>
             )}
         </div>

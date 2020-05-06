@@ -21,7 +21,7 @@ export default class EntityBox extends React.Component<IProps> {
         let raw = this.props.entity.abstracts.enwiki || this.props.entity.abstracts.zhwiki || ''
         const paras = raw.replace(/<span>|<\/span>/g, '').replace(/<a href=[^>]+>(.+?)<\/a>/g, '###$1###').split('<br/>')
         const els: JSX.Element[] = []
-        paras.map(para => {
+        paras.forEach(para => {
             const children = para.split('###').map((text, idx) => {
                 return idx % 2 === 0 ?
                     <span key={idx} className="n" dangerouslySetInnerHTML={{__html: text}}/> :

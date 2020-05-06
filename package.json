@@ -20,6 +20,7 @@
     "chart.js": "^2.9.3",
     "csv-parse": "^4.9.0",
     "dateformat": "^3.0.3",
+    "gh-pages": "^2.2.0",
     "lodash": "^4.17.15",
     "node-sass": "^4.14.1",
     "react": "^16.13.1",
@@ -31,7 +32,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": "react-app"
