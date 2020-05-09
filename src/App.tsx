@@ -64,7 +64,6 @@ export default class App extends React.Component<IProps, IState> {
         sort: this.state.search.sort
       }, cancelToken: this.searchCancelSource.token }).then(resp => {
       const timeCost = (new Date().getTime() - beginTime.getTime()) / 1000
-      console.log('qs', resp.data.query_segs)
       this.querySegments = resp.data.query_segs
       this.setState({
         search: {...this.state.search, entries: resp.data.data, count: resp.data.count},
@@ -211,7 +210,6 @@ export default class App extends React.Component<IProps, IState> {
   highlightedText(text: string): JSX.Element[] {
     const words = _.uniq([...this.querySegments, ...this.state.query.split(' ').map(w => w.toLowerCase()).filter(w => w.length > 0)])
     words.sort((a, b) => (b.length - a.length))
-    console.log(this.querySegments, words)
     let begin = 0
     const spans: JSX.Element[] = []
     while (true) {
