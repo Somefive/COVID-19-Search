@@ -19,7 +19,7 @@ This project is a front-end website for a search engine designed for COVID-19 re
 
 ### Techniques
 
-Front-end website is bootstrapped with [React Create App](https://github.com/facebook/create-react-app) written in mainly Typescript. The search engine is largely implemented with a simple text search on MongoDB. The segmentation on Chinese texts uses [THULAC](https://github.com/thunlp/THULAC). 
+Front-end website is bootstrapped with [React Create App](https://github.com/facebook/create-react-app) written in mainly Typescript. The search engine is largely implemented with a simple text search on MongoDB. The segmentation on Chinese texts uses [jieba](https://github.com/fxsjy/jieba).
 
 The back-end services is mainly provided by [AMiner COVID-19](https://covid-dashboard.aminer.cn) including the infection data and the news data. The entity search dynamically calls the API from [XLore](https://xlore.org/).
 

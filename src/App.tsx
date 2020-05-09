@@ -48,6 +48,7 @@ export default class App extends React.Component<IProps, IState> {
   private lastSearch: string = ''
   private lastEntitySearch: string = ''
   private searchQuery: string = ''
+  private querySegments: string[] = []
   onSearch = _.debounce(() => {
     if (this.searchQuery.length === 0 || this.searchQuery === this.lastSearch) return
     const updateEntity = !this.state.focusEntity || this.lastEntitySearch !== this.searchQuery
@@ -63,6 +64,8 @@ export default class App extends React.Component<IProps, IState> {
         sort: this.state.search.sort
       }, cancelToken: this.searchCancelSource.token }).then(resp => {
       const timeCost = (new Date().getTime() - beginTime.getTime()) / 1000
+      console.log('qs', resp.data.query_segs)
+      this.querySegments = resp.data.query_segs
       this.setState({
         search: {...this.state.search, entries: resp.data.data, count: resp.data.count},
         metaText: `${resp.data.count} documents retrieved in ${timeCost.toFixed(4)} seconds.`})
@@ -102,6 +105,7 @@ export default class App extends React.Component<IProps, IState> {
     }
     else {
       this.pageIndex = 0
+      this.querySegments = []
       this.setState({search: {...this.state.search, entries: [], count: 0}})
     }
   }
@@ -205,7 +209,9 @@ export default class App extends React.Component<IProps, IState> {
   }
 
   highlightedText(text: string): JSX.Element[] {
-    const words = this.state.query.split(' ').map(w => w.toLowerCase()).filter(w => w.length > 0)
+    const words = _.uniq([...this.querySegments, ...this.state.query.split(' ').map(w => w.toLowerCase()).filter(w => w.length > 0)])
+    words.sort((a, b) => (b.length - a.length))
+    console.log(this.querySegments, words)
     let begin = 0
     const spans: JSX.Element[] = []
     while (true) {
