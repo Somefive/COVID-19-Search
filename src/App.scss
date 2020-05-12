@@ -281,3 +281,84 @@ $header-top: 50px;
         outline: none;
     }
 }
+
+@media screen and (max-width: 768px) {
+    .search-component {
+        .app-title {
+            font-size: 32px;
+        }
+        .search-box {
+            width: 80%;
+            input {
+                font-size: 28px;
+                padding: 0 30px;
+                width: calc(100% - 60px);
+            }
+            .config-control {
+                svg {
+                    height: 28px;
+                    width: 28px;
+                }
+                .controls {
+                    right: 0;
+                    .control {
+                        &:hover .options {
+                            left: auto;
+                            right: 100%;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    .search-component.search {
+        .app-title {
+            display: none;
+        }
+        .search-box {
+            width: calc(100% - 40px);
+            left: 20px;
+        }
+    }
+    .info-box {
+        display: none;
+    }
+    .search-entries-container {
+        width: calc(100% - 40px);
+        height: calc(100% - #{$header-top * 2} - 10px);
+        padding: 5px 20px;
+        .paging {
+            margin-top: 20px;
+            text-align: center;
+            position: relative;
+            input {
+                padding: 5px;
+                margin: 5px;
+                width: calc(100% - 120px - 10px - 10px);
+            }
+            i.fas {
+                font-size: 18px;
+                padding: 0;
+                margin: 5px;
+                width: 20px;
+            }
+        }
+        .search-entries {
+            padding: 10px 10px 0 10px;
+            .entry-title {
+                font-size: 18px;
+                margin-bottom: 5px;
+            }
+            .entry-content {
+                font-size: 16px;
+            }
+            .entry-meta {
+                font-size: 16px;
+                span {
+                    margin-right: 10px;
+                }
+                margin-bottom: 10px;
+            }
+        }
+    }
+}
