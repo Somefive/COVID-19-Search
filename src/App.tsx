@@ -57,7 +57,7 @@ export default class App extends React.Component<IProps, IState> {
     this.searchCancelSource = axios.CancelToken.source()
     this.setState({metaText: 'Searching...', hoverEntry: undefined, focusEntity: updateEntity ? undefined : this.state.focusEntity})
     const beginTime = new Date()
-    axios.get(process.env.REACT_APP_API_URL + '/search', { params: {
+    axios.get(process.env.REACT_APP_API_URL + '/search-api', { params: {
         q: this.searchQuery,
         skip: this.state.search.pageSize * this.pageIndex,
         limit: this.state.search.pageSize,
