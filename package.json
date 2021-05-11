@@ -21,7 +21,7 @@
     "csv-parse": "^4.9.0",
     "dateformat": "^3.0.3",
     "gh-pages": "^2.2.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "node-sass": "^4.14.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
