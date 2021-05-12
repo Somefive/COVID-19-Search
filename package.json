@@ -17,7 +17,7 @@
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
     "axios": "^0.19.2",
-    "chart.js": "^2.9.3",
+    "chart.js": "^2.9.4",
     "csv-parse": "^4.9.0",
     "dateformat": "^3.0.3",
     "gh-pages": "^2.2.0",
